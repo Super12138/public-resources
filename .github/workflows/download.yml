@@ -1,4 +1,4 @@
-name: CI
+name: Download
 
 on:
   workflow_dispatch:
@@ -12,16 +12,25 @@ on:
         
 jobs:
   build:
-    runs-on: windows-latest
-
+    runs-on: ubuntu-latest
     steps:
-    - name: Install download tool
-      run: dotnet tool install -g dotnetCampus.FileDownloader.Tool
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0
 
-    - name: Download File
-      run: DownloadFile -u ${{ inputs.url }} -o ${{ inputs.filename }}
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4.0.3
+        with:
+            node-version: 18
 
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.3.4
-      with:
-        path: ${{ github.workspace }}/
+      - name: Replace URL
+        run: sed -i 's/文件的URL/${{ inputs.url }}/g' script.js
+
+      - name: Replace Name
+        run: sed -i 's/文件名/${{ inputs.filename }}/g' script.js
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4.3.4
+        with:
+          path: ${{ github.workspace }}/download
