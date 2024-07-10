@@ -30,6 +30,9 @@ jobs:
       - name: Replace Name
         run: sed -i 's/文件名/${{ inputs.filename }}/g' script.js
 
+      - name: Run script
+        run: node script.js
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4.3.4
         with:
