@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: 'File Name'
+        required: true
+      url:
+        description: 'File URL'
+        required: true
+        
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Install download tool
+      run: dotnet tool install -g dotnetCampus.FileDownloader.Tool
+    - name: Install send mail tool
+      run: dotnet tool install -g dotnetCampus.SendEmailTask
+
+    - name: Download File
+      run: DownloadFile -u ${{ inputs.url }} -o ${{ inputs.filename }}
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        path: ${{ github.workspace }}/
