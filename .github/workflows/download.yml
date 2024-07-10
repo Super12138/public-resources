@@ -17,8 +17,6 @@ jobs:
     steps:
     - name: Install download tool
       run: dotnet tool install -g dotnetCampus.FileDownloader.Tool
-    - name: Install send mail tool
-      run: dotnet tool install -g dotnetCampus.SendEmailTask
 
     - name: Download File
       run: DownloadFile -u ${{ inputs.url }} -o ${{ inputs.filename }}
