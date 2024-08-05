@@ -1,0 +1,51 @@
+name: Build desktop app
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - name: 'Windows-x64'
+            platform:  'windows/amd64'
+            os: 'windows-latest'
+
+          - name: 'Windows-ia32'
+            platform:  'windows/386'
+            os: 'windows-latest'
+
+          - name: 'Windows-arm64'
+            platform:  'windows/arm64'
+            os: 'windows-latest'
+
+          - name: 'macOS-universal'
+            platform:  'darwin/universal'
+            os: 'macos-latest'
+
+          - name: 'macOS-x64'
+            platform:  'darwin/amd64'
+            os: 'macos-latest'
+
+          - name: 'macOS-arm64'
+            platform:  'darwin/arm64'
+            os: 'macos-latest'
+
+    runs-on: ${{ matrix.build.os }}
+    steps:
+      - name: Build app (Windows)
+        if: runner.os == 'Windows'
+        run: echo "这是windows系统"
+      
+      - name: Build app (macOS)
+        if: runner.os == 'macOS'
+        run: echo "这是mac系统"
