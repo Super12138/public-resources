@@ -11,4 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install NDK
-        run: ls -l ${ANDROID_HOME}/
+        run: ls -l ${ANDROID_HOME}/cmdline-tools/latest/bin/
