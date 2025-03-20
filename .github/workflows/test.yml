@@ -12,3 +12,6 @@ jobs:
     steps:
       - name: Install NDK
         run: echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install 'ndk;27.0.12077973'
+        
+      - name: Check Path
+        run: ls -l ${ANDROID_HOME}/ndk
