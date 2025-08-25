@@ -22,7 +22,6 @@ const markdownIt = new MarkdownIt({
 const autoUpdateStore = useAutoUpdateStore(); // autoUpdateStore.enable是一个常量，用于控制是否启用自动更新
 
 const dialogOpen = ref<boolean>(false);
-const updateContent = ref<string>("");
 const currentVersion = VERSION_NAME;
 const newVersion = ref<string>("");
 
@@ -47,9 +46,6 @@ watch(data, (d) => {
     newVersion.value = json.name;
     if (lt(VERSION_NAME, remoteVersion)) {
         console.log("检测到新版本");
-        // TODO: 不要直接用字符串切割
-        const text = json.body.split("# 🚀 更新内容")[1].split("# ⬇️ 下载")[0];
-        updateContent.value = markdownIt.render(text);
         dialogOpen.value = true;
     } else {
         console.log("当前版本已是最新");
@@ -91,12 +87,13 @@ const openUpdateURLInBrowser = async () => {
                     console.log(`downloaded ${downloaded} from ${contentLength}`);
                     break;
                 case "Finished":
-                    alert("下载成功，即将重启");
+                    alert("下载成功，开始安装");
                     console.log("download finished");
                     break;
             }
         });
 
+                    alert("安装成功，即将重启");
         console.log("update installed");
         await relaunch();
     }
@@ -111,6 +108,5 @@ onUnmounted(() => {
     <RichDialog :headline="t('update-dialog.headline', { version: newVersion })"
         :description="t('update-dialog.description', { version: currentVersion })" v-model="dialogOpen"
         :close-on-overlay-click="false" @confirm="openUpdateURLInBrowser()">
-        <div v-html="updateContent"></div>
     </RichDialog>
 </template>
