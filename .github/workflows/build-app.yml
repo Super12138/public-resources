@@ -45,4 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.2
         with:
           name: Artifact
-          path: src-tauri/target/**/release/
+          path: |
+            src-tauri/target/**/release/bundle/**/*
+            src-tauri/target/**/release/Super Hash.exe
+            src-tauri/target/**/release/Super Hash
