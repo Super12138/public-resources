@@ -7,9 +7,10 @@ import MarkdownIt from "markdown-it";
 import { snackbar } from "mdui";
 import { lt } from "semver";
 import { onUnmounted, ref, watch } from "vue";
-
 import RichDialog from "./RichDialog.vue";
 import { useI18n } from "vue-i18n";
+import { check } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 const { t } = useI18n();
 const markdownIt = new MarkdownIt({
@@ -65,9 +66,40 @@ watch(error, (err) => {
     }
 });
 
-const openUpdateURLInBrowser = () => {
-    // TODO: 替换成 Tauri 方法
-    window.open("https://github.com/Super12138/Hash-Checker/releases/", "_blank");
+const openUpdateURLInBrowser = async () => {
+    const update = await check();
+    if (update) {
+        alert("发现更新" + update.version);
+        console.log(`found update ${update.version} from ${update.date} with notes ${update.body}`);
+        let downloaded = 0;
+        let contentLength = 0;
+        // alternatively we could also call update.download() and update.install() separately
+        await update.downloadAndInstall((event) => {
+            switch (event.event) {
+                case "Started":
+                    alert("开始下载");
+                    if (event.data.contentLength) {
+                        contentLength = event.data.contentLength;
+                    }
+                    console.log(`started downloading ${event.data.contentLength} bytes`);
+                    break;
+                case "Progress":
+                    downloaded += event.data.chunkLength;
+                    snackbar({
+                        message: `正在下载更新：${((downloaded / contentLength) * 100).toFixed(2)}%`,
+                    });
+                    console.log(`downloaded ${downloaded} from ${contentLength}`);
+                    break;
+                case "Finished":
+                    alert("下载成功，即将重启");
+                    console.log("download finished");
+                    break;
+            }
+        });
+
+        console.log("update installed");
+        await relaunch();
+    }
 };
 
 onUnmounted(() => {
@@ -76,13 +108,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <RichDialog
-        :headline="t('update-dialog.headline', { version: newVersion })"
-        :description="t('update-dialog.description', { version: currentVersion })"
-        v-model="dialogOpen"
-        :close-on-overlay-click="false"
-        @confirm="openUpdateURLInBrowser()"
-    >
+    <RichDialog :headline="t('update-dialog.headline', { version: newVersion })"
+        :description="t('update-dialog.description', { version: currentVersion })" v-model="dialogOpen"
+        :close-on-overlay-click="false" @confirm="openUpdateURLInBrowser()">
         <div v-html="updateContent"></div>
     </RichDialog>
 </template>
