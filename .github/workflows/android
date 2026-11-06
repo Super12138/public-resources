@@ -1,0 +1,80 @@
+name: Android CI
+
+env:
+  NDK_VERSION: "28.2.13676358"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore: [ "**.md", "LICENSE", ".gitignore", ".github/ISSUE_TEMPLATE/**", "art/**", "fastlane/**", "script/**" ]
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore: [ "**.md", "LICENSE", ".gitignore", ".github/ISSUE_TEMPLATE/**", "art/**", "fastlane/**", "script/**" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6.2.0
+        with:
+          java-version: 25
+          distribution: temurin
+          cache: gradle
+          # 仅在主分支上允许写入缓存
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Export ANDROID_HOME to env
+        run: echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+
+        #- name: Fix Permissions for Debug Keystore Path
+        #if: github.ref != 'refs/heads/main'
+        #run: sudo chmod -R 777 /home/runner/.config/.android
+
+      - name: Fix Permissions for NDK Path
+        run: sudo chown -R $USER:$USER $ANDROID_HOME
+
+      - name: Install NDK
+        if: steps.cache-ndk.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;${{ env.NDK_VERSION }}"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Dump Android toolchain info
+        run: |
+          echo "========== Android SDK 根目录 =========="
+          echo "ANDROID_HOME: $ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT:-未设置}"
+
+          echo "========== 已安装的 Build-Tools =========="
+          if [ -d "$ANDROID_HOME/build-tools" ]; then
+            ls -1 "$ANDROID_HOME/build-tools"
+          else
+            echo "build-tools 目录不存在"
+          fi
+
+          echo "========== 已安装的 Platforms (SDK 版本) =========="
+          if [ -d "$ANDROID_HOME/platforms" ]; then
+            ls -1 "$ANDROID_HOME/platforms"
+          else
+            echo "platforms 目录不存在"
+          fi
+
+          echo "========== 已安装的 NDK =========="
+          if [ -d "$ANDROID_HOME/ndk" ]; then
+            ls -1 "$ANDROID_HOME/ndk"
+          else
+            echo "ndk 目录不存在"
+          fi
+
+          echo "========== sdkmanager --list_installed (全量已安装包) =========="
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --list_installed 2>/dev/null || \
+            echo "sdkmanager --list_installed 执行失败"
